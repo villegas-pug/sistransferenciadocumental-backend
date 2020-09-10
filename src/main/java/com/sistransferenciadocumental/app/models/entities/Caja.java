@@ -21,11 +21,13 @@ import javax.persistence.TemporalType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "sim_cajas")
 @EqualsAndHashCode(of = { "idCaja" })
+@NoArgsConstructor
 public class Caja implements Serializable {
    private static final long serialVersionUID = 1L;
 

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import javax.validation.Valid;
 import com.sistransferenciadocumental.app.constants.Messages;
 import com.sistransferenciadocumental.app.errors.DataAccessEmptyWarning;
 import com.sistransferenciadocumental.app.errors.EntityFindByIdWarning;
@@ -23,16 +22,19 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import lombok.extern.log4j.Log4j2;
+
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 @RestController
 @RequestMapping(path = "/caja")
+@Log4j2
 public class CajaController {
    @Autowired
    private IService<Caja, Long> cajaService;
@@ -59,8 +61,8 @@ public class CajaController {
             .body(Response.builder().message(Messages.GET_MESSAGE_SUCCESS_LIST_ENTITY()).data(cajaDb).build());
    }
 
-   @RequestMapping(path = "/generar", method = RequestMethod.POST, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-   public ResponseEntity<?> generar(@RequestPart(required = true) MultipartFile file, @RequestPart @Valid Caja caja) {
+   @PostMapping(path = "/generar", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+   public ResponseEntity<?> generar(@RequestPart(required = true) MultipartFile file, @RequestPart Caja caja) {
       Caja cajaDb = new Caja();
       Optional<Usuario> operador = usuarioService.findById(caja.getOperador().getLogin());
 
@@ -68,7 +70,6 @@ public class CajaController {
       if (!operador.isPresent())
          throw new EntityFindByIdWarning(caja.getOperador().getNombre());
 
-      cajaDb.setEvaluador(usuarioService.findById(caja.getEvaluador().getLogin()).get());
       cajaDb.setOperador(operador.get());
       cajaDb.setTipoTramite(tipoTramiteService.findById(caja.getTipoTramite().getIdTipoTramite()).get());
       cajaDb.setFondoDocumental(this.getObjXlsx(file));
@@ -77,9 +78,10 @@ public class CajaController {
             Response.builder().message(Messages.GET_MESSAGE_SUCCESS_CREATE()).data(cajaService.findAll()).build());
    }
 
-   @PutMapping(path = "/actualizar", consumes = { "multipart/form-data" })
+   @PutMapping(path = "/actualizar", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
    public ResponseEntity<?> actualizar(@RequestPart(required = false) MultipartFile file, @RequestPart Caja caja) {
-
+      log.warn(file);
+      log.warn(caja);
       Optional<Caja> cajaDb = cajaService.findById(caja.getIdCaja());
       if (!cajaDb.isPresent())
          throw new EntityFindByIdWarning(caja.getIdCaja().toString());
